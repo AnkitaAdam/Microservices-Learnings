@@ -1,0 +1,273 @@
+MICROSERVICES ARCHITECTURE
+
+- there is no fixed architecture
+- we can customize any time
+
+as part of microserrvices architecture we are going to use below components..
+not all the components are compulsory
+
+
+1 service registery (eureka server)
+2 admin server
+3 zipkin server
+4 config server
+5 kafka server
+6 Redis server
+7 feignClient
+8 API Gateway
+9 ELK server
+10 database
+
+1] service registery / service discovery :
+
+service registery is used to maintain all the api's (microservices) informaion at one place like, name, status, ****urls**** and health at one place
+
+to set up this we are going to set up "eureka server"
+Note: Eureka server is provided by " spring cloud netflix" library
+--> it will provide user interface to get apis info
+consul / aws service registery / ==> paid
+
+2] Admin server
+===================
+
+It is used to monitor and manage all the apis at one place
+ex:
+1) health checks
+2) config props
+3) url mappings
+4) beans loaded
+5) changing log levels
+6) thread dumps
+7) head dumps
+
+it provides beautiful user interface to access all the apis actuator endpoints at one place
+
+3] zipkin server :
+====================
+
+distributed tracing of our request
+- how much time taking to process one request
+- which microservice taking more time to process
+- how many services involved in one request processing
+- it provides beautiful user interface to access apis execution details
+
+4] config server::
+===================
+
+is used to externalize configuration properties file
+to make the application loosely coupled
+- it is used to seperate application code and application properties
+- it is used to externalize config props of our application
+- it makes our application loosely coupled with properties file or yml files
+
+5] FeignClient
+=================
+
+- it is used for acheiving inter service communication
+- if one api communicate with another api within the same application then it is called as Inter service Communication
+
+6] API Gateway::
+===================
+
+- security guard for our backend microservices
+- it acts as entrypoint for the backend microservices
+- it acts mediator between frontend and backend apis
+- in api gateway we will write filters + routings
+
+filters: we can perform pre-process and post-process
+routing: to forward request to particular backend-apis
+
+
+kafka services -> distribted streaming
+redis server -> caching
+              
+
+projects::
+
+
+developing a own redis server 
+=========================================================
+
+MICROSERVICE MINI PROJECT
+
+*) developing serviceRegistry -> all the info maintained one place
+
+
+
+1] Create SpringBoot Application with below dependency
+   - Eureka server (spring-cloud-starter-netflix-eureka-server)
+2] configure @EnableEurekaServer annotation in boot start class  -> to start the eureka server
+
+3] use port 8761 in application.yml -> which will enables our backed api's auto registers with eureka server by default
+-- running in any other port -> we have to registers clients witheureka server manually
+
+
+eureka server -> is used to provide a dashboard of all the microservices present in the applications
+to make the application as a server disable the register of main application to eureka server by : eureka.client.register-with-eureka:false
+
+------------------------------------
+
+*) Developing spring admin-server
+
+1) create root application with "admin server" dependecy
+2) configure@EnableAdminServer annotation at start class
+3) change the port number
+4) run the application
+5) access the application url in browser (we can see the admin server ui) 
+
+---------------------------------
+
+*) developing Zipkin server  -> distributed to tracing our microservices
+
+1) we dont need not to develop project
+   -- it already available project on internet ..simply download the jar file and run it
+   -- it will run on 9411 port number
+   -- url : https://zipkin.io/pages/quickstart.html
+   -- to run: open terminal and type "java -jar <zipkin-server jar name>.jar"
+
+-------------------------------------
+
+*) developing actual microservice: DEVELOPING WELCOME-API
+
+dependencies to include: 
+- eureka-discovery-client -> to identify a microservice as a eureka client
+- admin client -> to identify as a admin client
+- zipkin client -> to identify as a zipkinclient
+
+- starter - web --> for restcontroller
+- devtools --> automatic reloading
+- actuators -> allows to monitor actuator in admin server
+
+- configure @EnableDiscoveryClient annotation at the start class
+- create restController with required method
+- configure below properties in application.props file
+
+spring.application.name=welcome-api
+
+server.port = 8081
+
+#for discovering the client microservice we need to manually add this service to \
+#  configuration by following way
+#eureka.client.service-url.deafultZone= http://localhost:<port of eureka>/eureka
+
+#client for admin server,, application should register with my admin serverr
+spring.boot.admin.client.url=http://localhost:8080/
+
+#to configure actuator endpoints:
+managemnt.endpoints.web.exposure.include= '*'
+
+
+------------------------------------------------
+
+DEVLOPING GREET MICROSERVICES
+
+
+*) developing actual microservice: DEVELOPING WELCOME-API
+
+dependencies to include: 
+- eureka-discovery-client -> to identify a microservice as a eureka client
+- admin client -> to identify as a admin client
+- zipkin client -> to identify as a zipkinclient
+
+- starter - web --> for restcontroller
+- devtools --> automatic reloading
+- actuators -> allows to monitor actuator in admin server
+
+- openfiegn -> for inter service communication
+
+
+- configure @EnableDiscoveryClient annotation at the start class
+- create restController with required method
+- configure below properties in application.props file
+
+spring.application.name=welcome-api
+
+server.port = 8081
+
+#for discovering the client microservice we need to manually add this service to \
+#  configuration by following way
+#eureka.client.service-url.deafultZone= http://localhost:<port of eureka>/eureka
+
+#client for admin server,, application should register with my admin serverr
+spring.boot.admin.client.url=http://localhost:8080/
+
+#to configure actuator endpoints:
+management.endpoints.web.exposure.include= '*'
+
+
+---------------------------------------------
+
+
+
+METHODS TO ACHIEVE INTER SERVICE COMMUNICATION:
+
+1] RestTemplate -> need url to extablish communication
+2] WebClient -> also need url to communicate with other service
+3] FeignClient -> communicates with the service name 
+
+why we nedd to go for feign client?
+--> because sometimes the url might get changed and also lot of url can be present so instead of using those url's we can establish communication using service_names;
+
+
+--------------------------------------------------------
+
+
+********** LOAD BALANCING *********
+
+- Distribute the load among different services
+- if we run our application in one server then burden will be increase on that server
+  -> single server should handle all the load
+  -> burden on server
+  -> response delay
+  -> server can crash
+  -> single point of failure
+-- to overcome the above problems we will run out application in multiple servers so that we can 
+   distribute the requests among multiple servers in round robin fashion
+
+- load balancer is used to distribute requests to multiple servers
+  -> less burden on server
+  -> quick responses to clients
+  -> no single point of failure (if one server is failed remaining server is going to handle that load)
+
+
+==================================================
+PROCEDURE I FOLLOWED TO LOAD BALANCE OF WELCOME API
+==================================================
+
+1] removed the port number configuration welcome api from properties file
+2] then taking instance of Enviornment class printed the server port number on which welcome api is runnning 
+3] run the welcome service in multiple instances
+4] feign client has a ribbon...ribbon is part of feign client which is automatically handles the load balancing..
+ribbon will choose the url dynamically by looking at the load..
+ribbon will follow round robbin manner to choose the url
+
+client side load balancing -> we done this
+
+server side load balancing -> cloud platforms provides this, aws like 
+
+===================================================
+API GATEWAY
+==========================================
+
+WORKING WITH SPRING CLOUD API GATEWAY
+
+1) create spring boot application with below dependencies
+ -> eureka client
+ -> cloud-gateway
+ -> devtools
+
+2) configure @EnableDiscoveryClient annotaion in start class
+
+3) configure API Gateway routings in application.properties file like
+
+	/welcome => welcome-service
+	/greet => greet-service
+
+4) create filter to validate incoming request
+
+	if request contains below header then it is valid request so process it
+		secret-key = ankita@it
+	if above header is not present then it is invalid request, don't process it.
+
+
+
